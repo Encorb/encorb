@@ -1,0 +1,9 @@
+src/components/site/Header.tsx(74,29): error TS2339: Property 'filter' does not exist on type 'Promise<Notification[]>'.
+src/components/site/Header.tsx(74,37): error TS7006: Parameter 'n' implicitly has an 'any' type.
+src/lib/supabase.ts(3,37): error TS4111: Property 'VITE_SUPABASE_URL' comes from an index signature, so it must be accessed with ['VITE_SUPABASE_URL'].
+src/lib/supabase.ts(4,41): error TS4111: Property 'VITE_SUPABASE_ANON_KEY' comes from an index signature, so it must be accessed with ['VITE_SUPABASE_ANON_KEY'].
+src/routes/dashboard.seller.tsx(154,33): error TS2379: Argument of type '{ request_id: string; listing_id: string; listing_title: string; buyer_id: string; buyer_name: string; seller_id: string; seller_name: string; category: WasteCategory; quantity: number; ... 4 more ...; status: "confirmed"; }' is not assignable to parameter of type 'Omit<Transaction, "id" | "created_at">' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'location' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/routes/index.tsx(17,20): error TS2554: Expected 1 arguments, but got 0.
