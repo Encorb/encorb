@@ -158,21 +158,52 @@ function SellerDashboard() {
   const [profileSaved, setProfileSaved] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [bolModalData, setBolModalData] = useState<any | null>(null);
+
+  // Sync tab with URL search parameter
+  useEffect(() => {
+    const handleUrlTab = () => {
+      const params = new URLSearchParams(window.location.search);
+      const queryTab = params.get("tab") as Tab | null;
+      if (
+        queryTab &&
+        ["overview", "listings", "add_listing", "requests", "transactions", "notifications", "profile"].includes(
+          queryTab
+        )
+      ) {
+        setTab(queryTab);
+      }
+    };
+    handleUrlTab();
+    window.addEventListener("popstate", handleUrlTab);
+    return () => window.removeEventListener("popstate", handleUrlTab);
+  }, []);
+
+  const switchTab = (newTab: Tab) => {
+    setTab(newTab);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", newTab);
+    window.history.replaceState(null, "", url.toString());
+  };
   const [activeChatOrder, setActiveChatOrder] = useState<any | null>(null);
 
   const refresh = useCallback(async () => {
     if (!user) return;
-    const [lsts, reqs, txns, notifs] = await Promise.all([
-      getListingsBySeller(user.id),
-      getRequestsBySeller(user.id),
-      getTransactionsBySeller(user.id),
-      getNotificationsByUser(user.id),
-    ]);
-    setListings(lsts);
-    setRequests(reqs);
-    setTransactions(txns);
-    setNotifications(notifs);
-    setLoading(false);
+    try {
+      const [lsts, reqs, txns, notifs] = await Promise.all([
+        getListingsBySeller(user.id),
+        getRequestsBySeller(user.id),
+        getTransactionsBySeller(user.id),
+        getNotificationsByUser(user.id),
+      ]);
+      setListings(lsts || []);
+      setRequests(reqs || []);
+      setTransactions(txns || []);
+      setNotifications(notifs || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
 
   useEffect(() => {
@@ -395,6 +426,10 @@ function SellerDashboard() {
     { id: "profile", label: "Facility Setup", icon: UserIcon },
   ];
 
+  const isNewUser =
+    (typeof window !== "undefined" && localStorage.getItem(`encorb_is_new_user_${user.id}`) === "true") ||
+    (activeListings === 0 && activeTxns === 0);
+
   return (
     <div className="min-h-screen bg-background text-foreground py-8">
       <div className="mx-auto max-w-[1400px] px-4 md:px-8">
@@ -403,11 +438,11 @@ function SellerDashboard() {
           <div>
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-emerald-500/10 px-3 py-0.5 text-xs font-bold text-emerald-600">
-                Verified Material Supplier
+                {isNewUser ? "New Member • Verified Supplier" : "Verified Material Supplier"}
               </span>
             </div>
             <h1 className="font-display text-2xl md:text-3xl font-extrabold text-foreground mt-1">
-              Supplier Command Center: {user.name.split(" ")[0]} 👋
+              {isNewUser ? "Welcome" : "Supplier Command Center:"}, {user.name.split(" ")[0]} 👋
             </h1>
             {profileData.businessName && (
               <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -429,7 +464,7 @@ function SellerDashboard() {
           {TABS.map(({ id, label, icon: Icon, badge }) => (
             <button
               key={id}
-              onClick={() => (id !== "add_listing" ? setTab(id) : initAddForm())}
+              onClick={() => (id !== "add_listing" ? switchTab(id) : initAddForm())}
               className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-xs font-bold transition-all ${
                 tab === id
                   ? "bg-emerald-500 text-slate-950 shadow-sm"
@@ -483,73 +518,6 @@ function SellerDashboard() {
               </div>
             </div>
 
-            {/* 4-Step Seller Lifecycle Guide (Image 3) */}
-            <div className="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-slate-900 via-slate-950 to-[#041a10] p-6 text-white shadow-xl">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6 border-b border-slate-800 pb-4">
-                <div>
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-300">
-                    Seller Playbook
-                  </span>
-                  <h3 className="font-display text-lg sm:text-xl font-bold text-white mt-0.5">
-                    Your 4-Step Path from Scrap to Settled Sale
-                  </h3>
-                </div>
-                <span className="text-xs font-mono text-emerald-400 font-bold bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-500/30 self-start sm:self-auto">
-                  Automated BOL + T+2 Payout
-                </span>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                  <div className="flex items-center justify-between text-xs mb-2">
-                    <span className="font-mono text-emerald-400 font-black text-lg">01</span>
-                    <span className="rounded bg-slate-800 px-2 py-0.5 text-[9px] font-bold text-slate-300">LIST</span>
-                  </div>
-                  <h4 className="font-bold text-sm text-white">Post your material</h4>
-                  <p className="text-xs text-slate-400 mt-1">List loads with ISRI specs, tonnage & pickup location. EIN verified in mins.</p>
-                  <div className="mt-3 pt-2 border-t border-slate-800 text-[10px] text-emerald-400 font-mono">
-                    Cu • ISRI Bare Bright • 18 t
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                  <div className="flex items-center justify-between text-xs mb-2">
-                    <span className="font-mono text-emerald-400 font-black text-lg">02</span>
-                    <span className="rounded bg-slate-800 px-2 py-0.5 text-[9px] font-bold text-slate-300">COMPARE</span>
-                  </div>
-                  <h4 className="font-bold text-sm text-white">Get verified offers</h4>
-                  <p className="text-xs text-slate-400 mt-1">Buyers bid against reference price. You see landed net numbers.</p>
-                  <div className="mt-3 pt-2 border-t border-slate-800 text-[10px] text-emerald-400 font-mono">
-                    3 offers • Best $8,510/t
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                  <div className="flex items-center justify-between text-xs mb-2">
-                    <span className="font-mono text-emerald-400 font-black text-lg">03</span>
-                    <span className="rounded bg-slate-800 px-2 py-0.5 text-[9px] font-bold text-slate-300">CONFIRM</span>
-                  </div>
-                  <h4 className="font-bold text-sm text-white">Confirm the deal</h4>
-                  <p className="text-xs text-slate-400 mt-1">Encorb auto-generates digital BOL & chain-of-custody without hassle.</p>
-                  <div className="mt-3 pt-2 border-t border-slate-800 text-[10px] text-emerald-400 font-mono">
-                    BOL + Chain of custody
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                  <div className="flex items-center justify-between text-xs mb-2">
-                    <span className="font-mono text-emerald-400 font-black text-lg">04</span>
-                    <span className="rounded bg-slate-800 px-2 py-0.5 text-[9px] font-bold text-slate-300">SHIP & PAY</span>
-                  </div>
-                  <h4 className="font-bold text-sm text-white">Ship and get paid</h4>
-                  <p className="text-xs text-slate-400 mt-1">Freight dispatched. Funds release on weigh ticket confirmation (T+2).</p>
-                  <div className="mt-3 pt-2 border-t border-slate-800 text-[10px] text-emerald-400 font-mono">
-                    Weight-ticket verified • T+2
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Pending Inquiries Box */}
             <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
@@ -557,7 +525,7 @@ function SellerDashboard() {
                   Incoming Purchase Inquiries & Bids
                 </h3>
                 <button
-                  onClick={() => setTab("requests")}
+                  onClick={() => switchTab("requests")}
                   className="text-xs font-bold text-emerald-600 hover:underline"
                 >
                   View All ({requests.length})

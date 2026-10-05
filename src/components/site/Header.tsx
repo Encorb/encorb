@@ -3,14 +3,16 @@
  * Shows Login/Register when logged out; user avatar + role + logout when logged in.
  */
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Menu, X, LogOut, LayoutDashboard, Bell } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Menu, X, LogOut, LayoutDashboard, Bell, Check, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
-import { getNotificationsByUser } from "@/lib/store";
+import { getNotificationsByUser, markAllNotificationsRead, markNotificationRead, type Notification } from "@/lib/store";
 
 const NAV = [
   { to: "/marketplace", label: "Marketplace" },
+  { to: "/how-it-works", label: "How It Works" },
+  { to: "/encore-engine", label: "Encore Engine" },
   { to: "/materials", label: "Materials" },
   { to: "/about", label: "About" },
   { to: "/faq", label: "FAQ" },
@@ -51,6 +53,9 @@ export function Header() {
   const navigate = useNavigate();
 
   const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [showNotifPopover, setShowNotifPopover] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -59,15 +64,54 @@ export function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    if (user) {
-      getNotificationsByUser(user.id).then((notifs: any[]) => {
-        setUnreadCount(notifs.filter((n: any) => !n.read).length);
-      });
-    } else {
+  const fetchNotifs = async () => {
+    if (!user) {
       setUnreadCount(0);
+      setNotifications([]);
+      return;
     }
+    const notifs = await getNotificationsByUser(user.id);
+    setNotifications(notifs);
+    setUnreadCount(notifs.filter((n) => !n.read).length);
+  };
+
+  useEffect(() => {
+    fetchNotifs();
   }, [user]);
+
+  // Close notification popover on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setShowNotifPopover(false);
+      }
+    };
+    if (showNotifPopover) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showNotifPopover]);
+
+  const handleMarkAllAsRead = async () => {
+    if (!user) return;
+    await markAllNotificationsRead(user.id);
+    setUnreadCount(0);
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const handleOpenAlertsTab = (notifId?: string) => {
+    if (notifId) {
+      markNotificationRead(notifId);
+      setNotifications((prev) => prev.map((n) => (n.id === notifId ? { ...n, read: true } : n)));
+      setUnreadCount((c) => Math.max(0, c - 1));
+    }
+    setShowNotifPopover(false);
+    if (!user) return;
+    navigate({
+      to: getDashboardPath(user.role),
+      search: { tab: "notifications" } as any,
+    });
+  };
 
   const handleLogout = () => {
     logout();
@@ -91,16 +135,16 @@ export function Header() {
         Skip to content
       </a>
 
-      <div className="mx-auto flex h-20 md:h-24 max-w-[1400px] items-center gap-8 px-4 md:px-8">
+      <div className="mx-auto flex h-20 md:h-24 max-w-[1400px] items-center gap-6 px-4 md:px-8">
         <Wordmark />
 
-        <nav aria-label="Primary" className="hidden flex-1 items-center gap-2 lg:flex ml-4">
+        <nav aria-label="Primary" className="hidden flex-1 items-center gap-1 xl:gap-2 lg:flex ml-4">
           {NAV.map((item) => (
             <Link
               key={item.to}
               to={item.to}
               activeProps={{ "data-active": "true" }}
-              className="rounded-xl px-4 py-2 text-base font-bold text-slate-700 transition-all hover:bg-emerald-50 hover:text-emerald-700 data-[active=true]:text-emerald-700 data-[active=true]:bg-emerald-50 data-[active=true]:font-extrabold"
+              className="rounded-xl px-3 py-2 text-sm xl:text-base font-bold text-slate-700 transition-all hover:bg-emerald-50 hover:text-emerald-700 data-[active=true]:text-emerald-700 data-[active=true]:bg-emerald-50 data-[active=true]:font-extrabold whitespace-nowrap"
             >
               {item.label}
             </Link>
@@ -111,19 +155,85 @@ export function Header() {
         <div className="ml-auto hidden items-center gap-2 lg:flex">
           {user ? (
             <>
-              {/* Notifications */}
-              <Link
-                to={getDashboardPath(user.role)}
-                className="relative grid h-9 w-9 place-items-center rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                aria-label="Notifications"
-              >
-                <Bell className="h-4 w-4" />
-                {unreadCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand text-[9px] font-bold text-white">
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
+              {/* Interactive Notifications Popover */}
+              <div className="relative" ref={notifRef}>
+                <button
+                  type="button"
+                  onClick={() => setShowNotifPopover((v) => !v)}
+                  className="relative grid h-10 w-10 place-items-center rounded-xl border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer"
+                  aria-label="Notifications"
+                >
+                  <Bell className="h-4 w-4" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white shadow">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {/* Popover Dropdown */}
+                {showNotifPopover && (
+                  <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl border border-border bg-card p-4 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="flex items-center justify-between pb-3 border-b border-border">
+                      <div className="flex items-center gap-2">
+                        <Bell className="h-4 w-4 text-emerald-600" />
+                        <h4 className="font-bold text-sm text-foreground">Notifications</h4>
+                        {unreadCount > 0 && (
+                          <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
+                            {unreadCount} new
+                          </span>
+                        )}
+                      </div>
+                      {unreadCount > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleMarkAllAsRead}
+                          className="flex items-center gap-1 text-[11px] font-medium text-emerald-600 hover:text-emerald-700 hover:underline"
+                        >
+                          <Check className="h-3 w-3" /> Mark all read
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="max-h-72 overflow-y-auto py-2 divide-y divide-border/60">
+                      {notifications.length === 0 ? (
+                        <div className="py-8 text-center text-xs text-muted-foreground">
+                          No notifications at this time
+                        </div>
+                      ) : (
+                        notifications.slice(0, 5).map((n) => (
+                          <div
+                            key={n.id}
+                            onClick={() => handleOpenAlertsTab(n.id)}
+                            className={cn(
+                              "py-2.5 px-2 rounded-lg cursor-pointer transition-colors hover:bg-muted/50",
+                              !n.read && "bg-emerald-500/5 font-medium"
+                            )}
+                          >
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-bold text-foreground">{n.title}</span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {new Date(n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{n.message}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <div className="pt-3 border-t border-border">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenAlertsTab()}
+                        className="w-full rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 py-2 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        Open Dashboard Alerts Center <ExternalLink className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
                 )}
-              </Link>
+              </div>
 
               {/* Dashboard */}
               <Link
@@ -209,6 +319,21 @@ export function Header() {
             <div className="flex flex-col gap-2 pt-4">
               {user ? (
                 <>
+                  <Link
+                    to={`${getDashboardPath(user.role)}?tab=notifications`}
+                    onClick={() => setOpen(false)}
+                    className="flex items-center justify-between rounded-lg bg-muted px-4 py-2.5 text-sm font-medium text-foreground"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Bell className="h-4 w-4 text-emerald-600" />
+                      Alerts & Notifications
+                    </span>
+                    {unreadCount > 0 && (
+                      <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                        {unreadCount} new
+                      </span>
+                    )}
+                  </Link>
                   <Link
                     to={getDashboardPath(user.role)}
                     onClick={() => setOpen(false)}

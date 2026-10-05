@@ -139,17 +139,13 @@ function Marketplace() {
       (typeFilter === "auctions" && l.is_auction) ||
       (typeFilter === "fixed_price" && !l.is_auction);
 
-    // Region
-    const matchRegion =
-      regionFilter === "All" || l.region === regionFilter;
-
     // State
     const matchState =
       stateFilter === "All" ||
       (l.state && l.state === stateFilter) ||
       l.location.toLowerCase().includes(stateFilter.toLowerCase());
 
-    return matchSearch && matchCat && matchType && matchRegion && matchState;
+    return matchSearch && matchCat && matchType && matchState;
   });
 
   // Sort listings
@@ -260,30 +256,15 @@ function Marketplace() {
               )}
             </div>
 
-            {/* Region Dropdown */}
-            <div className="relative sm:col-span-3 lg:col-span-3">
+            {/* Dedicated State Dropdown */}
+            <div className="relative sm:col-span-4 lg:col-span-4">
               <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <select
-                value={regionFilter}
-                onChange={(e) => setRegionFilter(e.target.value as USRegion)}
-                className="w-full rounded-xl border border-input bg-background py-2.5 pl-10 pr-4 text-xs sm:text-sm text-foreground focus:border-emerald-500 focus:outline-none font-medium"
-              >
-                {US_REGIONS.map((r) => (
-                  <option key={r} value={r}>
-                    {r === "All" ? "All US Regions" : `${r} Region`}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Dedicated State Dropdown — Item 5 & 13 */}
-            <div className="relative sm:col-span-2 lg:col-span-3">
               <select
                 value={stateFilter}
                 onChange={(e) => setStateFilter(e.target.value)}
-                className="w-full rounded-xl border border-input bg-background py-2.5 px-3 text-xs sm:text-sm text-foreground focus:border-emerald-500 focus:outline-none font-medium"
+                className="w-full rounded-xl border border-input bg-background py-2.5 pl-10 pr-4 text-xs sm:text-sm text-foreground focus:border-emerald-500 focus:outline-none font-medium"
               >
-                <option value="All">All 50 States</option>
+                <option value="All">All 50 States (All Regions)</option>
                 {US_STATES.filter((s) => s !== "All").map((st) => (
                   <option key={st} value={st}>
                     {st}

@@ -36,7 +36,7 @@ function LoginPage() {
         const result = await login(email, password);
         setLoading(false);
         if (result.error) { setError(result.error); return; }
-        // redirect handled by auth state change in AuthProvider
+        navigate({ to: "/dashboard" });
     };
 
     return (

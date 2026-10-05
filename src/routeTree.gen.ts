@@ -12,8 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as EncoreEngineRouteImport } from './routes/encore-engine'
+import { Route as Encore_engineRouteImport } from './routes/encore_engine'
 import { Route as ExchangeRouteImport } from './routes/exchange'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as How_it_worksRouteImport } from './routes/how_it_works'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as MaterialsRouteImport } from './routes/materials'
@@ -42,6 +47,21 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EncoreEngineRoute = EncoreEngineRouteImport.update({
+  id: '/encore-engine',
+  path: '/encore-engine',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Encore_engineRoute = Encore_engineRouteImport.update({
+  id: '/encore_engine',
+  path: '/encore_engine',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExchangeRoute = ExchangeRouteImport.update({
   id: '/exchange',
   path: '/exchange',
@@ -50,6 +70,16 @@ const ExchangeRoute = ExchangeRouteImport.update({
 const FaqRoute = FaqRouteImport.update({
   id: '/faq',
   path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const How_it_worksRoute = How_it_worksRouteImport.update({
+  id: '/how_it_works',
+  path: '/how_it_works',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -93,19 +123,19 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardAdminRoute = DashboardAdminRouteImport.update({
-  id: '/dashboard/admin',
-  path: '/dashboard/admin',
-  getParentRoute: () => rootRouteImport,
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardBuyerRoute = DashboardBuyerRouteImport.update({
-  id: '/dashboard/buyer',
-  path: '/dashboard/buyer',
-  getParentRoute: () => rootRouteImport,
+  id: '/buyer',
+  path: '/buyer',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardSellerRoute = DashboardSellerRouteImport.update({
-  id: '/dashboard/seller',
-  path: '/dashboard/seller',
-  getParentRoute: () => rootRouteImport,
+  id: '/seller',
+  path: '/seller',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const ListingIdRoute = ListingIdRouteImport.update({
   id: '/listing/$id',
@@ -117,8 +147,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRouteWithChildren
+  '/encore-engine': typeof EncoreEngineRoute
+  '/encore_engine': typeof Encore_engineRoute
   '/exchange': typeof ExchangeRoute
   '/faq': typeof FaqRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/how_it_works': typeof How_it_worksRoute
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
   '/materials': typeof MaterialsRoute
@@ -136,8 +171,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRouteWithChildren
+  '/encore-engine': typeof EncoreEngineRoute
+  '/encore_engine': typeof Encore_engineRoute
   '/exchange': typeof ExchangeRoute
   '/faq': typeof FaqRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/how_it_works': typeof How_it_worksRoute
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
   '/materials': typeof MaterialsRoute
@@ -156,8 +196,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRouteWithChildren
+  '/encore-engine': typeof EncoreEngineRoute
+  '/encore_engine': typeof Encore_engineRoute
   '/exchange': typeof ExchangeRoute
   '/faq': typeof FaqRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/how_it_works': typeof How_it_worksRoute
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
   '/materials': typeof MaterialsRoute
@@ -177,8 +222,13 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/contact'
+    | '/dashboard'
+    | '/encore-engine'
+    | '/encore_engine'
     | '/exchange'
     | '/faq'
+    | '/how-it-works'
+    | '/how_it_works'
     | '/login'
     | '/marketplace'
     | '/materials'
@@ -196,8 +246,13 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/contact'
+    | '/dashboard'
+    | '/encore-engine'
+    | '/encore_engine'
     | '/exchange'
     | '/faq'
+    | '/how-it-works'
+    | '/how_it_works'
     | '/login'
     | '/marketplace'
     | '/materials'
@@ -215,8 +270,13 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/contact'
+    | '/dashboard'
+    | '/encore-engine'
+    | '/encore_engine'
     | '/exchange'
     | '/faq'
+    | '/how-it-works'
+    | '/how_it_works'
     | '/login'
     | '/marketplace'
     | '/materials'
@@ -235,8 +295,13 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   ContactRoute: typeof ContactRoute
+  DashboardRoute: typeof DashboardRouteWithChildren
+  EncoreEngineRoute: typeof EncoreEngineRoute
+  Encore_engineRoute: typeof Encore_engineRoute
   ExchangeRoute: typeof ExchangeRoute
   FaqRoute: typeof FaqRoute
+  HowItWorksRoute: typeof HowItWorksRoute
+  How_it_worksRoute: typeof How_it_worksRoute
   LoginRoute: typeof LoginRoute
   MarketplaceRoute: typeof MarketplaceRoute
   MaterialsRoute: typeof MaterialsRoute
@@ -245,9 +310,6 @@ export interface RootRouteChildren {
   ResourcesRoute: typeof ResourcesRoute
   SecurityRoute: typeof SecurityRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  DashboardAdminRoute: typeof DashboardAdminRoute
-  DashboardBuyerRoute: typeof DashboardBuyerRoute
-  DashboardSellerRoute: typeof DashboardSellerRoute
   ListingIdRoute: typeof ListingIdRoute
 }
 
@@ -274,6 +336,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/encore-engine': {
+      id: '/encore-engine'
+      path: '/encore-engine'
+      fullPath: '/encore-engine'
+      preLoaderRoute: typeof EncoreEngineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/encore_engine': {
+      id: '/encore_engine'
+      path: '/encore_engine'
+      fullPath: '/encore_engine'
+      preLoaderRoute: typeof Encore_engineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/exchange': {
       id: '/exchange'
       path: '/exchange'
@@ -286,6 +369,20 @@ declare module '@tanstack/react-router' {
       path: '/faq'
       fullPath: '/faq'
       preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how_it_works': {
+      id: '/how_it_works'
+      path: '/how_it_works'
+      fullPath: '/how_it_works'
+      preLoaderRoute: typeof How_it_worksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -346,24 +443,24 @@ declare module '@tanstack/react-router' {
     }
     '/dashboard/admin': {
       id: '/dashboard/admin'
-      path: '/dashboard/admin'
+      path: '/admin'
       fullPath: '/dashboard/admin'
       preLoaderRoute: typeof DashboardAdminRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/buyer': {
       id: '/dashboard/buyer'
-      path: '/dashboard/buyer'
+      path: '/buyer'
       fullPath: '/dashboard/buyer'
       preLoaderRoute: typeof DashboardBuyerRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/seller': {
       id: '/dashboard/seller'
-      path: '/dashboard/seller'
+      path: '/seller'
       fullPath: '/dashboard/seller'
       preLoaderRoute: typeof DashboardSellerRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/listing/$id': {
       id: '/listing/$id'
@@ -375,12 +472,33 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface DashboardRouteChildren {
+  DashboardAdminRoute: typeof DashboardAdminRoute
+  DashboardBuyerRoute: typeof DashboardBuyerRoute
+  DashboardSellerRoute: typeof DashboardSellerRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAdminRoute: DashboardAdminRoute,
+  DashboardBuyerRoute: DashboardBuyerRoute,
+  DashboardSellerRoute: DashboardSellerRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   ContactRoute: ContactRoute,
+  DashboardRoute: DashboardRouteWithChildren,
+  EncoreEngineRoute: EncoreEngineRoute,
+  Encore_engineRoute: Encore_engineRoute,
   ExchangeRoute: ExchangeRoute,
   FaqRoute: FaqRoute,
+  HowItWorksRoute: HowItWorksRoute,
+  How_it_worksRoute: How_it_worksRoute,
   LoginRoute: LoginRoute,
   MarketplaceRoute: MarketplaceRoute,
   MaterialsRoute: MaterialsRoute,
@@ -389,9 +507,6 @@ const rootRouteChildren: RootRouteChildren = {
   ResourcesRoute: ResourcesRoute,
   SecurityRoute: SecurityRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  DashboardAdminRoute: DashboardAdminRoute,
-  DashboardBuyerRoute: DashboardBuyerRoute,
-  DashboardSellerRoute: DashboardSellerRoute,
   ListingIdRoute: ListingIdRoute,
 }
 export const routeTree = rootRouteImport

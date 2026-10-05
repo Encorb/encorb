@@ -24,7 +24,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import {
   LIVE_COMMODITY_INDICES,
-  INITIAL_USA_LISTINGS,
+  getListings,
   US_STATES,
   type Listing,
   type WasteCategory,
@@ -259,7 +259,13 @@ function LandingPage() {
     navigate({ to: "/marketplace" });
   };
 
-  const auctionLots = INITIAL_USA_LISTINGS.filter((l) => l.is_auction);
+  const [auctionLots, setAuctionLots] = useState<Listing[]>([]);
+
+  useEffect(() => {
+    getListings().then((all) => {
+      setAuctionLots(all.filter((l) => l.is_auction));
+    });
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
@@ -344,28 +350,13 @@ function LandingPage() {
                 </div>
 
                 <div className="flex flex-wrap sm:flex-nowrap gap-2">
-                  {/* Region Filter */}
-                  <select
-                    value={selectedRegion}
-                    onChange={(e) => setSelectedRegion(e.target.value as USRegion)}
-                    className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-xs font-semibold text-slate-300 focus:outline-none"
-                  >
-                    <option value="All">All US Regions</option>
-                    <option value="Midwest">Midwest</option>
-                    <option value="Gulf Coast">Gulf Coast</option>
-                    <option value="Northeast">Northeast</option>
-                    <option value="Southeast">Southeast</option>
-                    <option value="West Coast">West Coast</option>
-                    <option value="Southwest">Southwest</option>
-                  </select>
-
-                  {/* Dedicated State Filter — Item 5 */}
+                  {/* Dedicated State Filter */}
                   <select
                     value={selectedState}
                     onChange={(e) => setSelectedState(e.target.value)}
-                    className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-xs font-semibold text-slate-300 focus:outline-none max-w-[130px] sm:max-w-[160px]"
+                    className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-xs font-semibold text-slate-300 focus:outline-none"
                   >
-                    <option value="All">All 50 States</option>
+                    <option value="All">All 50 States (All Regions)</option>
                     {US_STATES.filter((s) => s !== "All").map((st) => (
                       <option key={st} value={st}>
                         {st}
@@ -393,31 +384,13 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* 3. ENTERPRISE METRICS STRIP */}
-      <section className="border-y border-border bg-card py-10">
-        <div className="mx-auto max-w-[1400px] px-4 md:px-8">
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-4 text-center">
-            <div>
-              <p className="font-display text-3xl sm:text-5xl font-extrabold text-emerald-600">140K+</p>
-              <p className="mt-1 text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Short Tons Diverted</p>
-            </div>
-            <div>
-              <p className="font-display text-3xl sm:text-5xl font-extrabold text-foreground">$48.5M+</p>
-              <p className="mt-1 text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">B2B Trade Volume (USD)</p>
-            </div>
-            <div>
-              <p className="font-display text-3xl sm:text-5xl font-extrabold text-emerald-600">850+</p>
-              <p className="mt-1 text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Verified US Facilities</p>
-            </div>
-            <div>
-              <p className="font-display text-3xl sm:text-5xl font-extrabold text-foreground">99.4%</p>
-              <p className="mt-1 text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-wider">Spec Purity Compliance</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* 3. FOUR STEPS — SELLER & BUYER WORKFLOW SELECTOR */}
+      <HowItWorksSteps />
 
-      {/* 4. LIVE AUCTIONS & FEATURED COMMODITIES */}
+      {/* 4. CIRCULAR ROI & IMPACT CALCULATOR */}
+      <CircularRoiCalculator />
+
+      {/* 5. LIVE AUCTIONS & FEATURED COMMODITIES */}
       <section className="py-20 bg-muted/20">
         <div className="mx-auto max-w-[1400px] px-4 md:px-8">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12">
@@ -440,65 +413,89 @@ function LandingPage() {
             </Link>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {auctionLots.map((lot) => (
-              <Link
-                key={lot.id}
-                to="/listing/$id"
-                params={{ id: lot.id }}
-                className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl"
-              >
-                {/* Image — Item 7 */}
-                <div className="relative h-56 w-full overflow-hidden bg-slate-100">
-                  <img
-                    src={lot.image_url}
-                    alt={lot.title}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-emerald-600/95 px-3 py-1 text-xs font-bold text-white shadow-md">
-                    <Clock className="h-3 w-3" /> Live Auction
-                  </div>
-                  <div className="absolute top-3 right-3 rounded-full bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 text-[11px] font-semibold text-white">
-                    {lot.location}
-                  </div>
-                </div>
-
-                {/* Body */}
-                <div className="p-5 flex flex-col flex-1">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-                    <span className="font-semibold uppercase tracking-wider text-emerald-600">{lot.category}</span>
-                    <span>{lot.bid_count || 0} active bids</span>
-                  </div>
-                  <h3 className="font-display font-bold text-base text-foreground group-hover:text-emerald-600 transition-colors line-clamp-2">
-                    {lot.title}
-                  </h3>
-                  <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{lot.description}</p>
-
-                  <div className="mt-4 pt-4 border-t border-border/80 grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <span className="text-muted-foreground">Lot Quantity</span>
-                      <p className="font-bold text-foreground">{lot.quantity.toLocaleString()} {lot.unit}</p>
+          {auctionLots.length > 0 ? (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {auctionLots.map((lot) => (
+                <Link
+                  key={lot.id}
+                  to="/listing/$id"
+                  params={{ id: lot.id }}
+                  className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl"
+                >
+                  {/* Image — Item 7 */}
+                  <div className="relative h-56 w-full overflow-hidden bg-slate-100">
+                    <img
+                      src={lot.image_url}
+                      alt={lot.title}
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-emerald-600/95 px-3 py-1 text-xs font-bold text-white shadow-md">
+                      <Clock className="h-3 w-3" /> Live Auction
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">Current High Bid</span>
-                      <p className="font-display font-extrabold text-emerald-600 text-sm">
-                        ${lot.current_bid?.toLocaleString()}
-                      </p>
+                    <div className="absolute top-3 right-3 rounded-full bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 text-[11px] font-semibold text-white">
+                      {lot.location}
                     </div>
                   </div>
 
-                  <div className="mt-5 flex items-center justify-between pt-3 border-t border-border">
-                    <span className="text-xs font-semibold text-slate-500">
-                      Min raise: +${lot.min_bid_increment}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-slate-950 transition-colors group-hover:bg-emerald-400">
-                      Place Bid <ChevronRight className="h-3.5 w-3.5" />
-                    </span>
+                  {/* Body */}
+                  <div className="p-5 flex flex-col flex-1">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+                      <span className="font-semibold uppercase tracking-wider text-emerald-600">{lot.category}</span>
+                      <span>{lot.bid_count || 0} active bids</span>
+                    </div>
+                    <h3 className="font-display font-bold text-base text-foreground group-hover:text-emerald-600 transition-colors line-clamp-2">
+                      {lot.title}
+                    </h3>
+                    <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{lot.description}</p>
+
+                    <div className="mt-4 pt-4 border-t border-border/80 grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-muted-foreground">Lot Quantity</span>
+                        <p className="font-bold text-foreground">{lot.quantity.toLocaleString()} {lot.unit}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Current High Bid</span>
+                        <p className="font-display font-extrabold text-emerald-600 text-sm">
+                          ${lot.current_bid?.toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 flex items-center justify-between pt-3 border-t border-border">
+                      <span className="text-xs font-semibold text-slate-500">
+                        Min raise: +${lot.min_bid_increment}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 px-4 py-2 text-xs font-bold text-slate-950 transition-colors group-hover:bg-emerald-400">
+                        Place Bid <ChevronRight className="h-3.5 w-3.5" />
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center">
+              <Gavel className="mx-auto h-12 w-12 text-muted-foreground/40 mb-3" />
+              <h3 className="font-display text-lg font-bold text-foreground">No Active Auctions at This Moment</h3>
+              <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
+                New auction lots are verified and listed weekly. Browse our standardized catalog or list your material stream.
+              </p>
+              <div className="mt-6 flex justify-center gap-4">
+                <Link
+                  to="/marketplace"
+                  className="rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 transition"
+                >
+                  Explore Marketplace
+                </Link>
+                <Link
+                  to="/materials"
+                  className="rounded-xl border border-border bg-card px-5 py-2.5 text-xs font-bold text-foreground hover:bg-muted transition"
+                >
+                  View Material Grades
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -608,14 +605,9 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* 4. THE CIRCULAR TRADE DESK & THE ENCORB PROCESS (Image 1 & 2) */}
+      {/* 6. THE CIRCULAR TRADE DESK & THE ENCORB PROCESS */}
       <CircularTradeDesk />
 
-      {/* 5. FOUR STEPS — SELLER & BUYER WORKFLOW SELECTOR (Image 3, 4, 5 & 6) */}
-      <HowItWorksSteps />
-
-      {/* 6. CIRCULAR ROI & IMPACT CALCULATOR */}
-      <CircularRoiCalculator />
 
       {/* 8. FINAL CTA BANNER */}
       <section className="py-24 bg-gradient-to-b from-background to-emerald-500/5">

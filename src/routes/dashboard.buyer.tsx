@@ -89,17 +89,46 @@ function BuyerDashboard() {
   const [bolModalData, setBolModalData] = useState<any | null>(null);
   const [activeChatOrder, setActiveChatOrder] = useState<any | null>(null);
 
+  // Sync tab with URL search parameter
+  useEffect(() => {
+    const handleUrlTab = () => {
+      const params = new URLSearchParams(window.location.search);
+      const queryTab = params.get("tab") as Tab | null;
+      if (
+        queryTab &&
+        ["overview", "requests", "transactions", "logistics", "notifications", "profile"].includes(queryTab)
+      ) {
+        setTab(queryTab);
+      }
+    };
+    handleUrlTab();
+    window.addEventListener("popstate", handleUrlTab);
+    return () => window.removeEventListener("popstate", handleUrlTab);
+  }, []);
+
+  const switchTab = (newTab: Tab) => {
+    setTab(newTab);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", newTab);
+    window.history.replaceState(null, "", url.toString());
+  };
+
   const refresh = useCallback(async () => {
     if (!user) return;
-    const [reqs, txns, notifs] = await Promise.all([
-      getRequestsByBuyer(user.id),
-      getTransactionsByBuyer(user.id),
-      getNotificationsByUser(user.id),
-    ]);
-    setRequests(reqs);
-    setTransactions(txns);
-    setNotifications(notifs);
-    setLoading(false);
+    try {
+      const [reqs, txns, notifs] = await Promise.all([
+        getRequestsByBuyer(user.id),
+        getTransactionsByBuyer(user.id),
+        getNotificationsByUser(user.id),
+      ]);
+      setRequests(reqs || []);
+      setTransactions(txns || []);
+      setNotifications(notifs || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
 
   useEffect(() => {
@@ -167,6 +196,10 @@ function BuyerDashboard() {
     { id: "profile", label: "Facility Profile", icon: UserIcon },
   ];
 
+  const isNewUser =
+    (typeof window !== "undefined" && localStorage.getItem(`encorb_is_new_user_${user.id}`) === "true") ||
+    (transactions.length === 0 && requests.length === 0);
+
   return (
     <div className="min-h-screen bg-background text-foreground py-8">
       <div className="mx-auto max-w-[1400px] px-4 md:px-8">
@@ -175,11 +208,11 @@ function BuyerDashboard() {
           <div>
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-emerald-500/10 px-3 py-0.5 text-xs font-bold text-emerald-600">
-                Verified Commercial Buyer
+                {isNewUser ? "New Member • Verified Buyer" : "Verified Commercial Buyer"}
               </span>
             </div>
             <h1 className="font-display text-2xl md:text-3xl font-extrabold text-foreground mt-1">
-              Welcome back, {user.name.split(" ")[0]} 👋
+              {isNewUser ? "Welcome" : "Welcome back"}, {user.name.split(" ")[0]} 👋
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               {user.business_name || "Commercial Recycling & Processing Facility"} • {user.location || "United States"}
@@ -199,7 +232,7 @@ function BuyerDashboard() {
           {TABS.map(({ id, label, icon: Icon, badge }) => (
             <button
               key={id}
-              onClick={() => setTab(id)}
+              onClick={() => switchTab(id)}
               className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-xs font-bold transition-all ${
                 tab === id
                   ? "bg-emerald-500 text-slate-950 shadow-sm"
@@ -261,74 +294,9 @@ function BuyerDashboard() {
                   <ShieldCheck className="h-5 w-5 text-emerald-600" />
                 </div>
                 <p className="font-display text-2xl font-extrabold text-emerald-600">100% Guaranteed</p>
-                <p className="text-xs text-muted-foreground mt-1">FDIC-insured settlement</p>
-              </div>
-            </div>
-
-            {/* 4-Step Buyer Procurement Playbook (Image 5 & 6) */}
-            <div className="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-slate-900 via-slate-950 to-[#041a10] p-6 text-white shadow-xl">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6 border-b border-slate-800 pb-4">
-                <div>
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-300">
-                    Buyer Playbook
-                  </span>
-                  <h3 className="font-display text-lg sm:text-xl font-bold text-white mt-0.5">
-                    Your 4-Step Procurement Lifecycle
-                  </h3>
-                </div>
-                <span className="text-xs font-mono text-emerald-400 font-bold bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-500/30 self-start sm:self-auto">
-                  100% Escrow Protected • Scope 3 ESG Certified
-                </span>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                  <div className="flex items-center justify-between text-xs mb-2">
-                    <span className="font-mono text-emerald-400 font-black text-lg">01</span>
-                    <span className="rounded bg-slate-800 px-2 py-0.5 text-[9px] font-bold text-slate-300">BROWSE</span>
-                  </div>
-                  <h4 className="font-bold text-sm text-white">Browse the order book</h4>
-                  <p className="text-xs text-slate-400 mt-1">Filter live listings by material, grade, region, and price. No cold-calling.</p>
-                  <div className="mt-3 pt-2 border-t border-slate-800 text-[10px] text-emerald-400 font-mono">
-                    240+ live loads • US-wide
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                  <div className="flex items-center justify-between text-xs mb-2">
-                    <span className="font-mono text-emerald-400 font-black text-lg">02</span>
-                    <span className="rounded bg-slate-800 px-2 py-0.5 text-[9px] font-bold text-slate-300">OFFER</span>
-                  </div>
-                  <h4 className="font-bold text-sm text-white">Make an offer</h4>
-                  <p className="text-xs text-slate-400 mt-1">Bid with full landed cost in view — material, freight, and Scope 3 emissions.</p>
-                  <div className="mt-3 pt-2 border-t border-slate-800 text-[10px] text-emerald-400 font-mono">
-                    Landed $8,690/t • All-in
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                  <div className="flex items-center justify-between text-xs mb-2">
-                    <span className="font-mono text-emerald-400 font-black text-lg">03</span>
-                    <span className="rounded bg-slate-800 px-2 py-0.5 text-[9px] font-bold text-slate-300">LOCK IN</span>
-                  </div>
-                  <h4 className="font-bold text-sm text-white">Lock it in</h4>
-                  <p className="text-xs text-slate-400 mt-1">Both sides KYC-verified. Funds sit in FDIC escrow until delivery confirmation.</p>
-                  <div className="mt-3 pt-2 border-t border-slate-800 text-[10px] text-emerald-400 font-mono">
-                    Escrow-held • KYC both sides
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                  <div className="flex items-center justify-between text-xs mb-2">
-                    <span className="font-mono text-emerald-400 font-black text-lg">04</span>
-                    <span className="rounded bg-slate-800 px-2 py-0.5 text-[9px] font-bold text-slate-300">RECEIVE</span>
-                  </div>
-                  <h4 className="font-bold text-sm text-white">Receive and report</h4>
-                  <p className="text-xs text-slate-400 mt-1">Take delivery with weigh ticket and automatic Scope 3 diversion report.</p>
-                  <div className="mt-3 pt-2 border-t border-slate-800 text-[10px] text-emerald-400 font-mono">
-                    Weight ticket + Scope 3 report
-                  </div>
-                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {transactions.length === 0 ? "Ready for your first settlement" : "FDIC-insured settlement"}
+                </p>
               </div>
             </div>
 
@@ -337,7 +305,7 @@ function BuyerDashboard() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-display text-lg font-bold text-foreground">Active Orders & Freight Dispatches</h3>
                 <button
-                  onClick={() => setTab("transactions")}
+                  onClick={() => switchTab("transactions")}
                   className="text-xs font-bold text-emerald-600 hover:underline"
                 >
                   View All ({transactions.length})

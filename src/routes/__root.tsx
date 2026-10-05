@@ -84,6 +84,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootComponent() {
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const MIGRATION_KEY = "encorb_fresh_prod_v3";
+      if (!localStorage.getItem(MIGRATION_KEY)) {
+        localStorage.removeItem("encorb_usa_listings");
+        localStorage.removeItem("encorb_usa_requests");
+        localStorage.removeItem("encorb_usa_transactions");
+        localStorage.removeItem("encorb_usa_order_chats");
+        localStorage.removeItem("encorb_usa_notifications");
+        localStorage.removeItem("encorb_registered_profiles");
+        localStorage.setItem(MIGRATION_KEY, "true");
+      }
+    }
+  }, []);
+
   return (
     <AuthProvider>
       <SmoothScroll />

@@ -2,9 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ClipboardList, SearchCheck, FileSignature, Truck, BadgeCheck, Scale } from "lucide-react";
 import { PageHeader, Section } from "@/components/site/PageHeader";
 import { CTAButton } from "@/components/site/CTAButton";
-import { ListingCard } from "@/components/site/ListingCard";
 import { StatBand } from "@/components/site/StatBand";
-import { sampleListings } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/exchange")({
   head: () => ({
@@ -110,21 +108,6 @@ function ExchangePage() {
         </div>
       </Section>
 
-      <Section
-        eyebrow="Sample order book"
-        title="Listings, as they will appear"
-        lede="These cards use placeholder data and are not transactable in this preview. The shape is final — real listings will occupy exactly this format."
-      >
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {sampleListings.map((l) => (
-            <ListingCard key={l.id} listing={l} />
-          ))}
-        </div>
-        <p className="mt-8 text-sm text-muted-foreground">
-          Reference prices are indicative and non-binding. Nothing on this page constitutes an offer
-          to buy or sell.
-        </p>
-      </Section>
 
       <Section>
         <div className="panel flex flex-wrap items-center justify-between gap-6 p-8">

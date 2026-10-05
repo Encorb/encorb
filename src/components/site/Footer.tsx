@@ -6,6 +6,8 @@ const COLUMNS: { title: string; links: { to: string; label: string }[] }[] = [
     title: "Exchange Platform",
     links: [
       { to: "/marketplace", label: "Live Auctions & Marketplace" },
+      { to: "/how-it-works", label: "How It Works" },
+      { to: "/encore-engine", label: "Encore Engine" },
       { to: "/materials", label: "Material Specifications" },
       { to: "/pricing", label: "Index & Reference Pricing" },
       { to: "/register", label: "Facility Registration" },
