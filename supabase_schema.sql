@@ -1,6 +1,7 @@
 -- ==============================================================================
 -- ENCORB CIRCULAR COMMODITIES PLATFORM — SUPABASE SQL SCHEMA
 -- Run this script in your Supabase project's SQL Editor (Dashboard > SQL Editor)
+-- This script is completely IDEMPOTENT and safe to run multiple times.
 -- ==============================================================================
 
 -- 1. Enable required extensions
@@ -207,7 +208,7 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- ==============================================================================
--- 9. ROW LEVEL SECURITY (RLS) POLICIES
+-- 9. ROW LEVEL SECURITY (RLS) POLICIES (Idempotent: Drops before creating)
 -- ==============================================================================
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.listings ENABLE ROW LEVEL SECURITY;
@@ -216,60 +217,77 @@ ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_messages ENABLE ROW LEVEL SECURITY;
 
--- Profiles: Public read, self update
+-- Profiles Policies
+DROP POLICY IF EXISTS "Profiles are viewable by authenticated users" ON public.profiles;
 CREATE POLICY "Profiles are viewable by authenticated users" ON public.profiles
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
 CREATE POLICY "Users can update their own profile" ON public.profiles
   FOR UPDATE TO authenticated USING (auth.uid() = id);
 
--- Listings: Anyone can view active listings, sellers manage their own
+-- Listings Policies
+DROP POLICY IF EXISTS "Active listings are viewable by everyone" ON public.listings;
 CREATE POLICY "Active listings are viewable by everyone" ON public.listings
   FOR SELECT USING (status = 'active' OR auth.uid() = seller_id);
 
+DROP POLICY IF EXISTS "Sellers can create listings" ON public.listings;
 CREATE POLICY "Sellers can create listings" ON public.listings
   FOR INSERT TO authenticated WITH CHECK (auth.uid() = seller_id);
 
+DROP POLICY IF EXISTS "Sellers can update their own listings" ON public.listings;
 CREATE POLICY "Sellers can update their own listings" ON public.listings
   FOR UPDATE TO authenticated USING (auth.uid() = seller_id);
 
+DROP POLICY IF EXISTS "Sellers can delete their own listings" ON public.listings;
 CREATE POLICY "Sellers can delete their own listings" ON public.listings
   FOR DELETE TO authenticated USING (auth.uid() = seller_id);
 
--- Buyer requests: Participants can read/update
+-- Buyer Requests Policies
+DROP POLICY IF EXISTS "Requests visible to participants" ON public.buyer_requests;
 CREATE POLICY "Requests visible to participants" ON public.buyer_requests
   FOR SELECT TO authenticated USING (auth.uid() = buyer_id OR auth.uid() = seller_id);
 
+DROP POLICY IF EXISTS "Buyers can create requests" ON public.buyer_requests;
 CREATE POLICY "Buyers can create requests" ON public.buyer_requests
   FOR INSERT TO authenticated WITH CHECK (auth.uid() = buyer_id);
 
+DROP POLICY IF EXISTS "Participants can update requests" ON public.buyer_requests;
 CREATE POLICY "Participants can update requests" ON public.buyer_requests
   FOR UPDATE TO authenticated USING (auth.uid() = buyer_id OR auth.uid() = seller_id);
 
--- Transactions: Participants can read/update
+-- Transactions Policies
+DROP POLICY IF EXISTS "Transactions visible to buyer and seller" ON public.transactions;
 CREATE POLICY "Transactions visible to buyer and seller" ON public.transactions
   FOR SELECT TO authenticated USING (auth.uid() = buyer_id OR auth.uid() = seller_id);
 
+DROP POLICY IF EXISTS "Transactions can be created by authenticated participants" ON public.transactions;
 CREATE POLICY "Transactions can be created by authenticated participants" ON public.transactions
   FOR INSERT TO authenticated WITH CHECK (auth.uid() = buyer_id OR auth.uid() = seller_id);
 
+DROP POLICY IF EXISTS "Participants can update transactions" ON public.transactions;
 CREATE POLICY "Participants can update transactions" ON public.transactions
   FOR UPDATE TO authenticated USING (auth.uid() = buyer_id OR auth.uid() = seller_id);
 
--- Notifications: Only recipient can view/update
+-- Notifications Policies
+DROP POLICY IF EXISTS "Users can view own notifications" ON public.notifications;
 CREATE POLICY "Users can view own notifications" ON public.notifications
   FOR SELECT TO authenticated USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own notifications" ON public.notifications;
 CREATE POLICY "Users can update own notifications" ON public.notifications
   FOR UPDATE TO authenticated USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Allow system/users to insert notifications" ON public.notifications;
 CREATE POLICY "Allow system/users to insert notifications" ON public.notifications
   FOR INSERT TO authenticated WITH CHECK (true);
 
--- Order messages: Only order participants can read/send
+-- Order Messages Policies
+DROP POLICY IF EXISTS "Order messages viewable by authenticated users" ON public.order_messages;
 CREATE POLICY "Order messages viewable by authenticated users" ON public.order_messages
   FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can post order messages" ON public.order_messages;
 CREATE POLICY "Authenticated users can post order messages" ON public.order_messages
   FOR INSERT TO authenticated WITH CHECK (auth.uid() = sender_id);
 
