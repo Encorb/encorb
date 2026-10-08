@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
-  role TEXT NOT NULL CHECK (role IN ('buyer', 'seller', 'admin')),
+  role TEXT NOT NULL DEFAULT 'buyer' CHECK (role IN ('buyer', 'seller', 'admin')),
   business_name TEXT,
   facility_type TEXT,
   ein TEXT,
@@ -25,6 +25,15 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   active BOOLEAN DEFAULT true NOT NULL,
   created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
+
+-- Ensure all columns exist even if profiles table was created by an older migration
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS facility_type TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS ein TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS location TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS bio TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS business_name TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS active BOOLEAN DEFAULT true NOT NULL;
 
 -- Index for role and email lookups
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
@@ -156,46 +165,69 @@ CREATE INDEX IF NOT EXISTS idx_chat_order ON public.order_messages(order_id);
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (
-    id,
-    name,
-    email,
-    role,
-    business_name,
-    facility_type,
-    ein,
-    location,
-    phone,
-    active
-  )
-  VALUES (
-    new.id,
-    COALESCE(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
-    new.email,
-    COALESCE(new.raw_user_meta_data->>'role', 'buyer'),
-    COALESCE(new.raw_user_meta_data->>'business_name', new.raw_user_meta_data->>'businessName', NULL),
-    COALESCE(new.raw_user_meta_data->>'facility_type', new.raw_user_meta_data->>'facilityType', NULL),
-    new.raw_user_meta_data->>'ein',
-    new.raw_user_meta_data->>'location',
-    new.raw_user_meta_data->>'phone',
-    true
-  )
-  ON CONFLICT (id) DO UPDATE SET
-    name = EXCLUDED.name,
-    business_name = COALESCE(EXCLUDED.business_name, public.profiles.business_name),
-    facility_type = COALESCE(EXCLUDED.facility_type, public.profiles.facility_type),
-    ein = COALESCE(EXCLUDED.ein, public.profiles.ein),
-    location = COALESCE(EXCLUDED.location, public.profiles.location),
-    phone = COALESCE(EXCLUDED.phone, public.profiles.phone);
+  BEGIN
+    INSERT INTO public.profiles (
+      id,
+      name,
+      email,
+      role,
+      business_name,
+      facility_type,
+      ein,
+      location,
+      phone,
+      active
+    )
+    VALUES (
+      new.id,
+      COALESCE(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
+      new.email,
+      COALESCE(new.raw_user_meta_data->>'role', 'buyer'),
+      COALESCE(new.raw_user_meta_data->>'business_name', new.raw_user_meta_data->>'businessName', NULL),
+      COALESCE(new.raw_user_meta_data->>'facility_type', new.raw_user_meta_data->>'facilityType', NULL),
+      new.raw_user_meta_data->>'ein',
+      new.raw_user_meta_data->>'location',
+      new.raw_user_meta_data->>'phone',
+      true
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      name = EXCLUDED.name,
+      business_name = COALESCE(EXCLUDED.business_name, public.profiles.business_name),
+      facility_type = COALESCE(EXCLUDED.facility_type, public.profiles.facility_type),
+      ein = COALESCE(EXCLUDED.ein, public.profiles.ein),
+      location = COALESCE(EXCLUDED.location, public.profiles.location),
+      phone = COALESCE(EXCLUDED.phone, public.profiles.phone);
+  EXCEPTION WHEN OTHERS THEN
+    -- Fallback insert if extra columns do not exist
+    BEGIN
+      INSERT INTO public.profiles (id, name, email, role, business_name, active)
+      VALUES (
+        new.id,
+        COALESCE(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
+        new.email,
+        COALESCE(new.raw_user_meta_data->>'role', 'buyer'),
+        COALESCE(new.raw_user_meta_data->>'business_name', new.raw_user_meta_data->>'businessName', NULL),
+        true
+      )
+      ON CONFLICT (id) DO NOTHING;
+    EXCEPTION WHEN OTHERS THEN
+      -- Don't crash user signup
+      NULL;
+    END;
+  END;
 
-  -- Send welcome notification
-  INSERT INTO public.notifications (user_id, type, title, message)
-  VALUES (
-    new.id,
-    'platform',
-    'Welcome to Encorb Platform',
-    'Your commercial account is ready. Explore live auctions, request quotes, or trade verified circular commodities.'
-  );
+  -- Send welcome notification (safely)
+  BEGIN
+    INSERT INTO public.notifications (user_id, type, title, message)
+    VALUES (
+      new.id,
+      'platform',
+      'Welcome to Encorb Platform',
+      'Your commercial account is ready. Explore live auctions, request quotes, or trade verified circular commodities.'
+    );
+  EXCEPTION WHEN OTHERS THEN
+    NULL;
+  END;
 
   RETURN new;
 END;

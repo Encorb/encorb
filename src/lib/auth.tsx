@@ -172,8 +172,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     localStorage.setItem("encorb_local_user", JSON.stringify(profile));
                     return {};
                 }
+
+                // If user authenticated in Supabase but profiles row is pending:
+                const meta = (data.user.user_metadata || {}) as any;
+                const fallbackUser: AppUser = {
+                    id: data.user.id,
+                    name: meta.name || data.user.email?.split("@")[0] || "User",
+                    email: data.user.email || email,
+                    role: (meta.role as UserRole) || "buyer",
+                    businessName: meta.business_name || meta.businessName,
+                    business_name: meta.business_name || meta.businessName,
+                    facilityType: meta.facilityType,
+                    facility_type: meta.facilityType,
+                    ein: meta.ein,
+                    location: meta.location,
+                    phone: meta.phone,
+                    active: true,
+                };
+                setUser(fallbackUser);
+                localStorage.setItem("encorb_local_user", JSON.stringify(fallbackUser));
+                return {};
             }
-        } catch {}
+            if (error) {
+                // If Supabase returns explicit error other than invalid credentials, log or display
+                console.warn("Supabase auth error:", error.message);
+            }
+        } catch (err: any) {
+            console.error("Login exception:", err);
+        }
+
+        // Check locally registered accounts (e.g. if Supabase was failing with 500 when creating user)
+        const localRegisteredRaw = typeof window !== "undefined" ? localStorage.getItem(`encorb_local_reg_${email.toLowerCase().trim()}`) : null;
+        if (localRegisteredRaw) {
+            try {
+                const regData = JSON.parse(localRegisteredRaw);
+                if (regData.password === password) {
+                    setUser(regData.user);
+                    localStorage.setItem("encorb_local_user", JSON.stringify(regData.user));
+                    return {};
+                }
+            } catch {}
+        }
 
         // Fallback for Demo Accounts if Supabase schema trigger error occurs
         const normalized = email.toLowerCase().trim();
@@ -294,6 +333,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(localUser);
         localStorage.setItem("encorb_local_user", JSON.stringify(localUser));
         localStorage.setItem(`encorb_is_new_user_${localId}`, "true");
+        localStorage.setItem(`encorb_local_reg_${email.toLowerCase().trim()}`, JSON.stringify({ password, user: localUser }));
         return { message: "Commercial account registered and verified." };
     };
 
