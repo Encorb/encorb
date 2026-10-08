@@ -50,8 +50,7 @@ function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
   if (user) {
-    const to = user.role === "buyer" ? "/dashboard/buyer" : user.role === "seller" ? "/dashboard/seller" : "/dashboard/admin";
-    navigate({ to });
+    navigate({ to: "/" });
     return null;
   }
 
@@ -108,10 +107,10 @@ function RegisterPage() {
       return;
     }
 
-    setMessage(result.message ?? "Commercial account verified. Directing to your operational dashboard...");
+    setMessage(result.message ?? "Commercial account verified. Directing to home page...");
     setTimeout(() => {
       navigate({
-        to: form.role === "buyer" ? "/dashboard/buyer" : "/dashboard/seller",
+        to: "/",
       });
     }, 1200);
   };

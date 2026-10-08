@@ -24,8 +24,7 @@ function LoginPage() {
 
     // Already logged in
     if (user) {
-        const to = user.role === "buyer" ? "/dashboard/buyer" : user.role === "seller" ? "/dashboard/seller" : "/dashboard/admin";
-        navigate({ to });
+        navigate({ to: "/" });
         return null;
     }
 
@@ -36,7 +35,7 @@ function LoginPage() {
         const result = await login(email, password);
         setLoading(false);
         if (result.error) { setError(result.error); return; }
-        navigate({ to: "/dashboard" });
+        navigate({ to: "/" });
     };
 
     return (

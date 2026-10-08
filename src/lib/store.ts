@@ -417,12 +417,14 @@ export async function createRequest(
 export async function getRequestsByBuyer(buyerId: string): Promise<BuyerRequest[]> {
   if (isUUID(buyerId)) {
     try {
-    const { data } = await supabase
-      .from("buyer_requests")
-      .select("*")
-      .eq("buyer_id", buyerId)
-      .order("created_at", { ascending: false });
-    if (data && data.length > 0) return data as BuyerRequest[];
+      const { data } = await timedQuery(
+        supabase
+          .from("buyer_requests")
+          .select("*")
+          .eq("buyer_id", buyerId)
+          .order("created_at", { ascending: false })
+      );
+      if (data && data.length > 0) return data as BuyerRequest[];
     } catch {}
   }
 
