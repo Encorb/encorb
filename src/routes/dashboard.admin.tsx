@@ -12,8 +12,12 @@ import {
   Loader2,
   ShieldCheck,
   Building2,
-  FileCheck
+  FileCheck,
+  Calculator,
+  GitCompare,
 } from "lucide-react";
+import { TransactionRoutingCalculator } from "@/components/TransactionRoutingCalculator";
+import { MultiBuyerCompareDashboard } from "@/components/MultiBuyerCompareDashboard";
 import {
   getAllProfiles,
   updateProfile,
@@ -33,7 +37,7 @@ export const Route = createFileRoute("/dashboard/admin")({
   component: AdminDashboard,
 });
 
-type Tab = "overview" | "users" | "listings" | "transactions";
+type Tab = "overview" | "users" | "listings" | "transactions" | "emissions_audit";
 
 const STATUS_COLORS: Record<string, string> = {
   active: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
@@ -92,6 +96,7 @@ function AdminDashboard() {
     { id: "users", label: "US Facilities & Users", icon: Users },
     { id: "listings", label: "Commodity Lots", icon: Package },
     { id: "transactions", label: "Escrow & Settlements", icon: ArrowLeftRight },
+    { id: "emissions_audit", label: "Scope 3 & Audit Engine", icon: Calculator },
   ];
 
   return (
@@ -355,6 +360,28 @@ function AdminDashboard() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 5: SCOPE 3 & AUDIT ENGINE (Sheet 08, 09, 11, 12, 13) */}
+        {tab === "emissions_audit" && (
+          <div className="space-y-8">
+            <div>
+              <h2 className="font-display text-xl font-bold text-foreground">
+                EPA WARM v16 Scope 3 Emissions & Multi-Buyer Audit Oversight
+              </h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Verify avoided emissions calculations, emission factor derivations, and multi-buyer distribution across all US counterparties.
+              </p>
+            </div>
+
+            <div className="space-y-10">
+              <TransactionRoutingCalculator />
+
+              <div className="pt-6 border-t border-border">
+                <MultiBuyerCompareDashboard />
+              </div>
             </div>
           </div>
         )}

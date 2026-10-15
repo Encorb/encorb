@@ -17,7 +17,11 @@ import {
   ChevronRight,
   TrendingUp,
   FileText,
+  Calculator,
+  GitCompare,
 } from "lucide-react";
+import { TransactionRoutingCalculator } from "@/components/TransactionRoutingCalculator";
+import { MultiBuyerCompareDashboard } from "@/components/MultiBuyerCompareDashboard";
 
 export const Route = createFileRoute("/encore-engine")({
   head: () => ({
@@ -134,6 +138,7 @@ const INSIGHTS = [
 
 export function EncoreEnginePage() {
   const [activeSolution, setActiveSolution] = useState(0);
+  const [activeEngineTool, setActiveEngineTool] = useState<"calculator" | "multi-buyer">("calculator");
 
   return (
     <div className="bg-background text-foreground min-h-screen">
@@ -144,55 +149,107 @@ export function EncoreEnginePage() {
 
         <div className="mx-auto max-w-[1240px] relative z-10">
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-xs font-bold text-emerald-400 mb-6">
-            <Cpu className="h-4 w-4 text-emerald-400" /> Powered by Circular Intelligence
+            <Cpu className="h-4 w-4 text-emerald-400" /> Powered by Circular Intelligence & EPA WARM v16
           </div>
 
           <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white max-w-4xl leading-[1.08]">
-            What is the{" "}
+            Encore Engine:{" "}
             <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">
-              Encore Engine?
+              Transaction Routing & Multi-Buyer Optimization
             </span>
           </h1>
 
           <p className="mt-6 text-base sm:text-xl text-slate-300 max-w-3xl leading-relaxed">
-            We enable businesses to transform industrial waste into measurable global value — connecting verified partners
-            through secure, compliant, and data-driven circular trade algorithms.
+            Proprietary end-to-end emissions calculation algorithm with multi-buyer optimization. Audit-ready Certificates of Diversion, EPA SmartWay freight emission factors, and verified Scope 3 Cat. 5 accounting.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-4">
-            <Link
-              to="/marketplace"
+            <a
+              href="#engine-simulator"
               className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-6 py-3.5 text-sm font-bold text-slate-950 hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/25"
             >
-              Explore Live Services <ArrowRight className="h-4 w-4" />
-            </Link>
+              Launch Live Calculator <ArrowRight className="h-4 w-4" />
+            </a>
             <Link
-              to="/how-it-works"
+              to="/marketplace"
               className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/60 px-6 py-3.5 text-sm font-bold text-white hover:bg-slate-800 transition-all"
             >
-              See How It Works
+              Browse Live Marketplace
             </Link>
           </div>
 
           {/* Engine Key Metrics Strip */}
           <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl">
             <div className="rounded-2xl border border-emerald-500/20 bg-slate-950/70 p-6 backdrop-blur">
-              <p className="font-display text-4xl font-black text-emerald-400">85%</p>
-              <p className="text-sm font-bold text-white mt-1">Value Recovery</p>
-              <p className="text-xs text-slate-400 mt-0.5">Average yield uplift across industrial waste streams</p>
+              <p className="font-display text-4xl font-black text-emerald-400">129+</p>
+              <p className="text-sm font-bold text-white mt-1">WARM Material Factors</p>
+              <p className="text-xs text-slate-400 mt-0.5">Primary EPA v16 & ecoinvent v3.10 metrics</p>
             </div>
 
             <div className="rounded-2xl border border-emerald-500/20 bg-slate-950/70 p-6 backdrop-blur">
-              <p className="font-display text-4xl font-black text-teal-400">90%</p>
-              <p className="text-sm font-bold text-white mt-1">Compliance Rate</p>
-              <p className="text-xs text-slate-400 mt-0.5">Automated BOL & regulatory documentation speed</p>
+              <p className="font-display text-4xl font-black text-teal-400">32,334</p>
+              <p className="text-sm font-bold text-white mt-1">US Census Gazetteer Places</p>
+              <p className="text-xs text-slate-400 mt-0.5">Spherical law of cosines road distance calculation</p>
             </div>
 
             <div className="rounded-2xl border border-emerald-500/20 bg-slate-950/70 p-6 backdrop-blur">
-              <p className="font-display text-4xl font-black text-cyan-400">75+</p>
-              <p className="text-sm font-bold text-white mt-1">Global Markets</p>
-              <p className="text-xs text-slate-400 mt-0.5">Cross-border verified buyer and recycler network</p>
+              <p className="font-display text-4xl font-black text-cyan-400">ISO 14064-3</p>
+              <p className="text-sm font-bold text-white mt-1">Audit Verification</p>
+              <p className="text-xs text-slate-400 mt-0.5">5% ICVCM conservative buffer applied</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Interactive Engine Simulator Section (Sheet 08, 09, 11, 12) */}
+      <section id="engine-simulator" className="py-16 lg:py-20 bg-slate-900/50 border-b border-border">
+        <div className="mx-auto max-w-[1300px] px-4 md:px-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-widest text-emerald-600">
+                Interactive Routing & Emissions Engine
+              </span>
+              <h2 className="mt-1 font-display text-3xl sm:text-4xl font-extrabold text-foreground">
+                Run Live Calculations & Buyer Comparisons
+              </h2>
+            </div>
+
+            {/* Toggle between Calculator & Multi-Buyer Compare */}
+            <div className="inline-flex p-1.5 rounded-2xl bg-muted/80 border border-border">
+              <button
+                type="button"
+                onClick={() => setActiveEngineTool("calculator")}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  activeEngineTool === "calculator"
+                    ? "bg-card text-foreground shadow-sm border border-border/80"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Calculator className="h-4 w-4 text-emerald-600" />
+                <span>Single Transaction Calculator</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveEngineTool("multi-buyer")}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  activeEngineTool === "multi-buyer"
+                    ? "bg-card text-foreground shadow-sm border border-border/80"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <GitCompare className="h-4 w-4 text-blue-600" />
+                <span>Multi-Buyer Optimization (1×5)</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Active Tool View */}
+          <div className="bg-card/40 rounded-3xl p-2 sm:p-6 border border-border/60">
+            {activeEngineTool === "calculator" ? (
+              <TransactionRoutingCalculator />
+            ) : (
+              <MultiBuyerCompareDashboard />
+            )}
           </div>
         </div>
       </section>

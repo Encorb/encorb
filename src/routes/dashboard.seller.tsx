@@ -23,10 +23,15 @@ import {
   Truck,
   ShieldCheck,
   FileCheck,
-  MessageSquare
+  MessageSquare,
+  Calculator,
+  GitCompare,
+  Leaf
 } from "lucide-react";
 import { DigitalBolModal } from "@/components/DigitalBolModal";
 import { OrderChatModal } from "@/components/OrderChatModal";
+import { TransactionRoutingCalculator } from "@/components/TransactionRoutingCalculator";
+import { MultiBuyerCompareDashboard } from "@/components/MultiBuyerCompareDashboard";
 import {
   getListingsBySeller,
   createListing,
@@ -58,7 +63,16 @@ export const Route = createFileRoute("/dashboard/seller")({
   component: SellerDashboard,
 });
 
-type Tab = "overview" | "listings" | "add_listing" | "requests" | "transactions" | "notifications" | "profile";
+type Tab =
+  | "overview"
+  | "listings"
+  | "add_listing"
+  | "requests"
+  | "transactions"
+  | "routing_calculator"
+  | "buyer_compare"
+  | "notifications"
+  | "profile";
 
 const CATEGORIES: WasteCategory[] = [
   "Plastic",
@@ -128,6 +142,7 @@ const CATEGORY_IMAGES: Record<WasteCategory, string> = {
   Glass: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&q=80",
   "E-Waste": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80",
   Textile: "https://images.unsplash.com/photo-1558171813-2f2b9fa0e3c9?w=800&q=80",
+  Organic: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80",
   "Reclaimed Timber": "https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?w=800&q=80",
   Industrial: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80",
   Other: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80",
@@ -422,6 +437,8 @@ function SellerDashboard() {
     { id: "add_listing", label: "Post New Material", icon: Plus },
     { id: "requests", label: "Inquiries & Bids", icon: Clock, badge: pendingRequests },
     { id: "transactions", label: "Sales & Contracts", icon: CheckCircle, badge: activeTxns },
+    { id: "routing_calculator", label: "Emissions Calculator", icon: Calculator },
+    { id: "buyer_compare", label: "Multi-Buyer Matrix", icon: GitCompare },
     { id: "notifications", label: "Alerts", icon: Bell, badge: unread },
     { id: "profile", label: "Facility Setup", icon: UserIcon },
   ];
@@ -1061,6 +1078,40 @@ function SellerDashboard() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* TAB: ROUTING CALCULATOR (Sheet 08, 10, 11, 12) */}
+        {tab === "routing_calculator" && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-display text-xl font-bold text-foreground">
+                  EPA WARM v16 Transaction Routing & Emissions Calculator
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Simulate verified avoided greenhouse gas emissions for scheduled or prospective supplier loads.
+                </p>
+              </div>
+            </div>
+            <TransactionRoutingCalculator />
+          </div>
+        )}
+
+        {/* TAB: MULTI-BUYER COMPARE (Sheet 09) */}
+        {tab === "buyer_compare" && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-display text-xl font-bold text-foreground">
+                  Multi-Buyer Routing & Net Avoided Emissions Optimizer
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Evaluate up to 5 concurrent buyer bids against haul distances, transport modes, and pathway diffs.
+                </p>
+              </div>
+            </div>
+            <MultiBuyerCompareDashboard />
           </div>
         )}
 

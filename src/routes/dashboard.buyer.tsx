@@ -19,10 +19,13 @@ import {
   ChevronRight,
   FileCheck,
   Scale,
-  MessageSquare
+  MessageSquare,
+  Calculator,
+  Leaf
 } from "lucide-react";
 import { DigitalBolModal } from "@/components/DigitalBolModal";
 import { OrderChatModal } from "@/components/OrderChatModal";
+import { TransactionRoutingCalculator } from "@/components/TransactionRoutingCalculator";
 import {
   getRequestsByBuyer,
   getTransactionsByBuyer,
@@ -43,7 +46,14 @@ export const Route = createFileRoute("/dashboard/buyer")({
   component: BuyerDashboard,
 });
 
-type Tab = "overview" | "requests" | "transactions" | "logistics" | "notifications" | "profile";
+type Tab =
+  | "overview"
+  | "requests"
+  | "transactions"
+  | "logistics"
+  | "routing_calculator"
+  | "notifications"
+  | "profile";
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-amber-500/10 text-amber-600 border-amber-500/20",
@@ -192,6 +202,7 @@ function BuyerDashboard() {
     { id: "requests", label: "RFQs & Bids", icon: Clock, badge: pendingReqs },
     { id: "transactions", label: "Orders & Escrow", icon: CheckCircle, badge: activeTxns },
     { id: "logistics", label: "Freight & BOL Tracking", icon: Truck },
+    { id: "routing_calculator", label: "Emissions Calculator", icon: Calculator },
     { id: "notifications", label: "Alerts", icon: Bell, badge: unread },
     { id: "profile", label: "Facility Profile", icon: UserIcon },
   ];
@@ -673,6 +684,23 @@ function BuyerDashboard() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* TAB: ROUTING CALCULATOR (Sheet 08, 10, 11, 12) */}
+        {tab === "routing_calculator" && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-display text-xl font-bold text-foreground">
+                  EPA WARM v16 Scope 3 Carbon & Avoided Emissions Engine
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Calculate verified Scope 3 Cat. 5 emission reductions and generate Certificates of Diversion for your facility intake.
+                </p>
+              </div>
+            </div>
+            <TransactionRoutingCalculator />
           </div>
         )}
 

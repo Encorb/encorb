@@ -57,8 +57,11 @@ export function MaterialsPage() {
   const groupedByFamily = useMemo(() => {
     const groups: Record<string, TaxonomyMaterial[]> = {};
     for (const mat of filteredMaterials) {
-      if (!groups[mat.family]) groups[mat.family] = [];
-      groups[mat.family].push(mat);
+      const fam = mat.family;
+      if (!groups[fam]) {
+        groups[fam] = [];
+      }
+      groups[fam]?.push(mat);
     }
     return groups;
   }, [filteredMaterials]);
