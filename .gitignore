@@ -33,3 +33,6 @@ dist-ssr
 
 *.docx
 *.xlsx
+
+# Generated cPanel/Hostinger deployment bundle
+encorb-hostinger-deploy.zip
