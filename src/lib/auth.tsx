@@ -53,7 +53,7 @@ async function fetchProfile(id: string): Promise<AppUser | null> {
             .from("profiles")
             .select("*")
             .eq("id", id)
-            .single();
+            .maybeSingle();
         if (error || !data) return null;
         return {
             id: data.id,
@@ -137,14 +137,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             } catch {}
         }
 
-        // Get initial session
-        supabase.auth.getSession().then(({ data }) => {
-            if (data.session) {
+        // Get initial session with timeout
+        Promise.race([
+            supabase.auth.getSession(),
+            new Promise<{ data: { session: null } }>((resolve) => setTimeout(() => resolve({ data: { session: null } }), 3000)),
+        ]).then(({ data }) => {
+            if (data?.session) {
                 setSession(data.session);
                 loadUser(data.session.user);
-            } else if (!saved) {
+            } else {
                 setLoading(false);
             }
+        }).catch(() => {
+            setLoading(false);
         });
 
         // Listen for auth state changes

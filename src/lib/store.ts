@@ -204,6 +204,15 @@ function setLocal<T>(key: string, val: T): void {
   }
 }
 
+export const timedQuery = async <T>(promise: PromiseLike<T>, timeoutMs = 1500): Promise<T> => {
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error("Supabase Query Timeout")), timeoutMs)),
+  ]);
+};
+
+export const isUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+
 // ─── LISTINGS API ─────────────────────────────────────────────────────────────
 
 export async function getListings(): Promise<Listing[]> {
@@ -232,7 +241,7 @@ export async function getListings(): Promise<Listing[]> {
 
 export async function getListingById(id: string): Promise<Listing | null> {
   try {
-    const { data } = await supabase.from("listings").select("*").eq("id", id).single();
+    const { data } = await supabase.from("listings").select("*").eq("id", id).maybeSingle();
     if (data) return data as Listing;
   } catch {}
 
@@ -367,15 +376,6 @@ export async function placeBid(
 
   return { success: true, message: "Bid placed successfully!", listing };
 }
-
-const timedQuery = async <T>(promise: PromiseLike<T>, timeoutMs = 1500): Promise<T> => {
-  return Promise.race([
-    Promise.resolve(promise),
-    new Promise<T>((_, reject) => setTimeout(() => reject(new Error("Supabase Query Timeout")), timeoutMs)),
-  ]);
-};
-
-const isUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
 // ─── REQUESTS (RFQ / PURCHASE INQUIRY) ────────────────────────────────────────
 

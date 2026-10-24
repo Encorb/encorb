@@ -40,6 +40,7 @@ import {
 } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
+import { LocationPicker } from "@/components/ui/LocationPicker";
 
 export const Route = createFileRoute("/dashboard/buyer")({
   head: () => ({ meta: [{ title: "Buyer Dashboard — Encorb USA" }] }),
@@ -80,7 +81,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function BuyerDashboard() {
-  const { user, logout, refreshUser } = useAuth();
+  const { user, loading: authLoading, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("overview");
   const [requests, setRequests] = useState<BuyerRequest[]>([]);
@@ -124,7 +125,10 @@ function BuyerDashboard() {
   };
 
   const refresh = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     try {
       const [reqs, txns, notifs] = await Promise.all([
         getRequestsByBuyer(user.id),
@@ -135,13 +139,15 @@ function BuyerDashboard() {
       setTransactions(txns || []);
       setNotifications(notifs || []);
     } catch (e) {
-      console.error(e);
+      console.error("Dashboard refresh error:", e);
     } finally {
       setLoading(false);
     }
   }, [user]);
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!user) {
       navigate({ to: "/login" });
       return;
@@ -151,8 +157,8 @@ function BuyerDashboard() {
       return;
     }
     setProfileData({
-      name: user.name,
-      email: user.email,
+      name: user.name || "",
+      email: user.email || "",
       phone: user.phone ?? "",
       location: user.location ?? "",
       bio: user.bio ?? "",
@@ -160,21 +166,31 @@ function BuyerDashboard() {
     });
     refresh();
 
+    // Fallback timer so spinner never hangs indefinitely
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+
     // Realtime notifications
     const unsub = subscribeToNotifications(user.id, (n) => {
       setNotifications((prev) => [n, ...prev]);
     });
     return () => {
+      clearTimeout(timer);
       unsub();
     };
-  }, [user]);
+  }, [user, authLoading]);
 
-  if (!user || loading) {
+  if (authLoading && !user) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
       </div>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   const pendingReqs = requests.filter((r) => r.status === "pending").length;
@@ -309,6 +325,26 @@ function BuyerDashboard() {
                   {transactions.length === 0 ? "Ready for your first settlement" : "FDIC-insured settlement"}
                 </p>
               </div>
+            </div>
+
+            {/* Quick Link to Emissions Engine */}
+            <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 via-card to-card p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+              <div className="flex items-center gap-3.5">
+                <div className="h-11 w-11 rounded-xl bg-emerald-500/20 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Calculator className="h-6 w-6" />
+                </div>
+                <div>
+                  <h4 className="font-display text-sm font-bold text-foreground">EPA WARM v16 Scope 3 Carbon & Avoided Emissions Engine</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">Calculate verified Scope 3 Cat. 5 emission reductions and generate audit-ready Certificates of Diversion for your plant intake.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => switchTab("routing_calculator")}
+                className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-500 transition shadow-sm shrink-0"
+              >
+                Open Emissions Calculator →
+              </button>
             </div>
 
             {/* Recent Orders Overview */}
@@ -826,12 +862,10 @@ function BuyerDashboard() {
 
                 <div>
                   <label className="block text-xs font-semibold text-foreground mb-1">Plant / Receiving Location</label>
-                  <input
-                    type="text"
+                  <LocationPicker
                     value={profileData.location}
-                    onChange={(e) => setProfileData((p) => ({ ...p, location: e.target.value }))}
-                    placeholder="e.g., Columbus, OH (Zip 43215)"
-                    className="w-full rounded-xl border border-input bg-background p-2.5 text-xs font-medium focus:border-emerald-600 focus:outline-none"
+                    onChange={(val) => setProfileData((p) => ({ ...p, location: val }))}
+                    placeholder="Search plant city or state (e.g., Columbus, OH)..."
                   />
                 </div>
 

@@ -57,6 +57,7 @@ import {
 } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
+import { LocationPicker } from "@/components/ui/LocationPicker";
 
 export const Route = createFileRoute("/dashboard/seller")({
   head: () => ({ meta: [{ title: "Seller & Facility Portal — Encorb USA" }] }),
@@ -149,7 +150,7 @@ const CATEGORY_IMAGES: Record<WasteCategory, string> = {
 };
 
 function SellerDashboard() {
-  const { user, logout, refreshUser } = useAuth();
+  const { user, loading: authLoading, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("overview");
   const [listings, setListings] = useState<Listing[]>([]);
@@ -202,7 +203,10 @@ function SellerDashboard() {
   const [activeChatOrder, setActiveChatOrder] = useState<any | null>(null);
 
   const refresh = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     try {
       const [lsts, reqs, txns, notifs] = await Promise.all([
         getListingsBySeller(user.id),
@@ -215,13 +219,15 @@ function SellerDashboard() {
       setTransactions(txns || []);
       setNotifications(notifs || []);
     } catch (e) {
-      console.error(e);
+      console.error("Seller dashboard refresh error:", e);
     } finally {
       setLoading(false);
     }
   }, [user]);
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!user) {
       navigate({ to: "/login" });
       return;
@@ -231,14 +237,19 @@ function SellerDashboard() {
       return;
     }
     setProfileData({
-      name: user.name,
-      email: user.email,
+      name: user.name || "",
+      email: user.email || "",
       phone: user.phone ?? "",
       location: user.location ?? "",
       bio: user.bio ?? "",
       businessName: user.businessName ?? "",
     });
     refresh();
+
+    // Fallback timer so spinner never hangs indefinitely
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2000);
 
     const unsubReqs = subscribeToSellerRequests(user.id, (req) => {
       setRequests((prev) => [req, ...prev]);
@@ -247,17 +258,22 @@ function SellerDashboard() {
       setNotifications((prev) => [n, ...prev]);
     });
     return () => {
+      clearTimeout(timer);
       unsubReqs();
       unsubNotifs();
     };
-  }, [user]);
+  }, [user, authLoading]);
 
-  if (!user || loading) {
+  if (authLoading && !user) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
       </div>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   const activeListings = listings.filter((l) => l.status === "active").length;
@@ -532,6 +548,35 @@ function SellerDashboard() {
                 </div>
                 <p className="font-display text-3xl font-extrabold text-foreground">{activeTxns}</p>
                 <p className="text-xs text-muted-foreground mt-1">In settlement & transit</p>
+              </div>
+            </div>
+
+            {/* Quick Link to Emissions & Multi-Buyer Engine */}
+            <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 via-card to-card p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+              <div className="flex items-center gap-3.5">
+                <div className="h-11 w-11 rounded-xl bg-emerald-500/20 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Calculator className="h-6 w-6" />
+                </div>
+                <div>
+                  <h4 className="font-display text-sm font-bold text-foreground">EPA WARM v16 Scope 3 Emissions & Routing Engine</h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">Simulate avoided GHG emissions, compare multi-buyer logistics, and generate audit-ready Certificates of Diversion.</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => switchTab("routing_calculator")}
+                  className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-500 transition shadow-sm"
+                >
+                  Emissions Calculator →
+                </button>
+                <button
+                  type="button"
+                  onClick={() => switchTab("buyer_compare")}
+                  className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-bold text-foreground hover:bg-muted transition"
+                >
+                  Multi-Buyer Matrix
+                </button>
               </div>
             </div>
 
@@ -811,12 +856,10 @@ function SellerDashboard() {
 
                 <div>
                   <label className="block font-semibold text-foreground mb-1">Origin City & State / ZIP *</label>
-                  <input
-                    type="text"
+                  <LocationPicker
                     value={form.location}
-                    onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
-                    placeholder="e.g., Houston, TX (Zip 77001)"
-                    className="w-full rounded-xl border border-input bg-background p-2.5 text-xs focus:border-emerald-600 focus:outline-none"
+                    onChange={(val) => setForm((f) => ({ ...f, location: val }))}
+                    placeholder="Search origin city or state (e.g., Houston, TX)..."
                   />
                 </div>
 
@@ -1185,12 +1228,10 @@ function SellerDashboard() {
 
                 <div>
                   <label className="block font-semibold text-foreground mb-1">Yard / Facility Address</label>
-                  <input
-                    type="text"
+                  <LocationPicker
                     value={profileData.location}
-                    onChange={(e) => setProfileData((p) => ({ ...p, location: e.target.value }))}
-                    placeholder="e.g., Houston, TX (Zip 77001)"
-                    className="w-full rounded-xl border border-input bg-background p-2.5 focus:border-emerald-600 focus:outline-none"
+                    onChange={(val) => setProfileData((p) => ({ ...p, location: val }))}
+                    placeholder="Search facility city or state (e.g., Houston, TX)..."
                   />
                 </div>
 

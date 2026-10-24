@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AlertCircle, CheckCircle, Building2, ShieldCheck, ArrowRight, ArrowLeft, Lock, Mail, User, Phone, MapPin, Hash } from "lucide-react";
 import { useAuth, type UserRole } from "@/lib/auth";
+import { LocationPicker } from "@/components/ui/LocationPicker";
 
 export const Route = createFileRoute("/register")({
   head: () => ({ meta: [{ title: "Commercial Registration & Facility Onboarding — Encorb USA" }] }),
@@ -49,10 +50,11 @@ function RegisterPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  if (user) {
-    navigate({ to: "/" });
-    return null;
-  }
+  useEffect(() => {
+    if (user) {
+      navigate({ to: "/" });
+    }
+  }, [user, navigate]);
 
   const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault();
@@ -336,18 +338,13 @@ function RegisterPage() {
                   <label htmlFor="reg-loc" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
                     Facility Location (City, State) *
                   </label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
-                    <input
-                      id="reg-loc"
-                      type="text"
-                      required
-                      value={form.location}
-                      onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
-                      placeholder="e.g. Houston, TX"
-                      className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-foreground focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 transition-all"
-                    />
-                  </div>
+                  <LocationPicker
+                    id="reg-loc"
+                    required
+                    value={form.location}
+                    onChange={(val) => setForm((f) => ({ ...f, location: val }))}
+                    placeholder="Type city or state (e.g. Boston, MA)..."
+                  />
                 </div>
 
                 <div>

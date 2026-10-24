@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Recycle, AlertCircle } from "lucide-react";
 import { useAuth, type UserRole } from "@/lib/auth";
 
@@ -22,11 +22,12 @@ function LoginPage() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    // Already logged in
-    if (user) {
-        navigate({ to: "/" });
-        return null;
-    }
+    // Redirect if already logged in
+    useEffect(() => {
+        if (user) {
+            navigate({ to: "/dashboard" });
+        }
+    }, [user, navigate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -35,7 +36,7 @@ function LoginPage() {
         const result = await login(email, password);
         setLoading(false);
         if (result.error) { setError(result.error); return; }
-        navigate({ to: "/" });
+        navigate({ to: "/dashboard" });
     };
 
     return (

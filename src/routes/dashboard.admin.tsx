@@ -48,7 +48,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 function AdminDashboard() {
-  const { user, logout } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("overview");
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -58,18 +58,25 @@ function AdminDashboard() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    const [profs, lsts, txns] = await Promise.all([
-      getAllProfiles(),
-      getListings(),
-      getAllTransactions(),
-    ]);
-    setProfiles(profs);
-    setListings(lsts);
-    setTransactions(txns);
-    setLoading(false);
+    try {
+      const [profs, lsts, txns] = await Promise.all([
+        getAllProfiles(),
+        getListings(),
+        getAllTransactions(),
+      ]);
+      setProfiles(profs || []);
+      setListings(lsts || []);
+      setTransactions(txns || []);
+    } catch (e) {
+      console.error("Admin dashboard refresh error:", e);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
+    if (authLoading) return;
+
     if (!user) {
       navigate({ to: "/login" });
       return;
@@ -79,14 +86,24 @@ function AdminDashboard() {
       return;
     }
     refresh();
-  }, [user]);
 
-  if (!user || loading) {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [user, authLoading]);
+
+  if (authLoading && !user) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
       </div>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   const totalRevenue = transactions.reduce((s, t) => s + (t.total || 0), 0);
